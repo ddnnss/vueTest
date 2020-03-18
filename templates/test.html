@@ -1,0 +1,127 @@
+{% load static %}
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.12.0/dist/axios.min.js"></script>
+
+</head>
+<body>
+{{ items }}
+<div id="app">
+    <div style="display: flex; justify-content: space-between" class="">
+        <ul>
+
+            <todo-item
+                    v-for="item in groceryList"
+                    v-bind:todo="item"
+                    v-bind:key="item.id"
+            ></todo-item>
+
+            <input type="text" v-model="fname">
+            <a href="#" @click="sendreq">send</a>
+            <p> [[message]] </p>
+
+        </ul>
+        <div class="">
+            <ul>
+
+                <todo-item1
+                        v-for="item in groceryList"
+                        v-bind:todo="item"
+                        v-bind:key="item.id"
+                ></todo-item1>
+
+
+                <p> [[message]] </p>
+
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+{#    <script src="{% static 'js/script.js' %}"></script>#}
+<script>
+    {#    {% for item in items %}#}
+    {#        app.groceryList.push(  { id: {{ item.id }}, text: '{{ item.name }}' })#}
+    {#    {% endfor %}#}
+    Vue.component('todo-item', {
+        delimiters : ['[[',']]'],
+        props: ['todo'],
+        template: '<li> [[todo.text ]]</li>'
+    })
+
+    Vue.component('todo-item1', {
+        delimiters : ['[[',']]'],
+        props: ['todo'],
+        template: '<li> [[todo.text ]]</li>'
+    })
+    var app = new Vue({
+        delimiters : ['[[',']]'],
+        el: '#app',
+        data: () => {
+            return {
+                fname: '',
+                message: 'dsfdsf',
+                groceryList: [
+                    {% for item in items %}
+                        { id: {{ item.id }}, text: '{{ item.name }}' },
+                    {% endfor %}
+
+
+                ]
+            }
+        },
+        methods:{
+            sendreq: function(){
+                console.log('this.fname',this.fname)
+                {#axios.post('http://localhost:8000/entry/',{  fname: this.fname, lname: this.lname, age: this.age })#}
+                {# .then(response => this.responseData = response.data)#}
+                {#    console.log('ok')#}
+                {#        console.log(this.responseData[0])#}
+                {#            this.groceryList.push(this.responseData[0])#}
+                {# .catch(error => {#}
+                {#     console.log('error')#}
+                {##}
+                {# });#}
+                let data = {  fname: this.fname, lname: this.lname, age: this.age }
+                fetch('http://localhost:8000/entry/', {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    redirect: 'follow',
+                    referrer: 'no-referrer',
+                    body: JSON.stringify(data), // тип данных в body должен соответвовать значению заголовка "Content-Type"
+                })
+                    .then(response => response.json())
+                    .then(data => {console.log(data)
+                        this.groceryList=[]
+                        for (var x in data){
+                            this.groceryList.push(data[x])
+                        }
+
+
+                    })
+            }
+        }
+
+    })
+</script>
+</body>
+</html>
+
+
+@csrf_exempt
+def entry(request):
+body_unicode = request.body.decode('utf-8')
+body = json.loads(body_unicode)
+response = [
+{'id': 33,'text': body['fname']},
+{'id': 35, 'text': body['fname'] + '2'}
+]
+
+return JsonResponse(response,safe=False)
